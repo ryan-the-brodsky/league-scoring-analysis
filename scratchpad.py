@@ -10,6 +10,7 @@ passing_2019.rename(columns={
     "TD":"pass_touchdowns", 
     "Cmp":"pass_completions"
 }, inplace=True)
+passing_2019['Pos'] = passing_2019['Pos'].apply(clean_position)
 
 rushing_2019 = pd.read_csv('./2019-rushing-stats.csv')
 rushing_2019['Player'] = rushing_2019['Player'].apply(lambda x : x.split('\\')[0])
@@ -20,6 +21,7 @@ rushing_2019.rename(columns={
     'TD': 'rushing_tds',
     'Fmb':'fumbles_lost_rushing'
 }, inplace=True)
+rushing_2019['Pos'] = rushing_2019['Pos'].apply(clean_position)
 
 receiving_2019 = pd.read_csv('./2019-receiving-stats.csv')
 receiving_2019['Player'] = receiving_2019['Player'].apply(lambda x : x.split('\\')[0])
@@ -32,18 +34,14 @@ receiving_2019.rename(columns={
     "1D": "receiving_first_downs"
     
 }, inplace=True)
-receiving_2019.head()
+receiving_2019['Pos'] = receiving_2019['Pos'].apply(clean_position)
 
 
 offensive_players_2019 = pd.merge(rushing_2019, passing_2019, how="outer", on='Player')
-offensive_players_2019['position'] = offensive_players_2019.apply(lambda x : x['Pos'] if 'Pos' in x else x['Pos_x'], axis=1)
-offensive_players_2019['position'] = offensive_players_2019['position'].apply(lambda x : str(x).upper())
+offensive_players_2019['position'] = offensive_players_2019.apply(lambda x : x['Pos_x'] if 'Pos_x' in x else x['Pos_y'], axis=1)
 offensive_players_2019 = pd.merge(offensive_players_2019, receiving_2019, how="outer", on="Player")
-offensive_players_2019['position'] = offensive_players_2019.apply(lambda x : x['Pos'] if 'Pos' in x else x['Pos_y'], axis=1)
+offensive_players_2019['position'] = offensive_players_2019.apply(lambda x : x['position'] if 'position' in x else x['Pos'], axis=1)
+offensive_players_2019['position'] = offensive_players_2019['position'].apply(lambda x : str(x).upper())
 offensive_players_2019.drop(['Pos', 'Pos_x', 'Pos_y'], axis='columns', inplace=True)
 offensive_players_2019.fillna(0, inplace=True)
-
-# offensive_players.columns.tolist()
-offensive_players_2019.sort_values(by="rushing_yards", ascending=False )
-
-offensive_players_2019.head()
+offensive_players_2019['Season'] = '2019'
